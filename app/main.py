@@ -3,8 +3,10 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
-
+import numpy as np
 import sys
+
+PARAMETERS = [1,2,3]
 
 class MplCanvas(FigureCanvasQTAgg):
 
@@ -23,65 +25,99 @@ class Color(QWidget):
         palette.setColor(QPalette.Window, QColor(color))
         self.setPalette(palette)
 
-class MySlider(QSlider):
-    def __init__(self, value, paramidx):
-        super(MySlider, self).__init__(Qt.Horizontal)
-        self.setMinimum(-10)
-        self.setMaximum(10)
-        self.setValue(value)
-        self.setTickPosition(QSlider.TicksBelow)
-        self.setTickInterval(5)
-
 class MyLabelSlider(QVBoxLayout):
     def __init__(self, value, paramidx):
-        if paramidx not in [1, 2, 3]:
+        if paramidx not in [0, 1, 2]:
             raise Exception
-        self.label = QLabel(f"Parameter {paramidx}")
+        super(MyLabelSlider, self).__init__()
+        self.paramidx = paramidx
+        self.label = QLabel(f"Parameter {paramidx + 1} has value {PARAMETERS[paramidx]}")
         self.label.setFont(QFont("Arial", 16))
 
-        self.slider = QSlider()
+        self.slider = QSlider(Qt.Horizontal)
         self.slider.setMinimum(-10)
         self.slider.setMaximum(10)
         self.slider.setValue(value)
         self.slider.setTickPosition(QSlider.TicksBelow)
         self.slider.setTickInterval(5)
+        self.slider.valueChanged.connect(self.change_parameter_value)
 
         self.addWidget(self.label)
-        self.addWidget(self.slider)
+        sliderLayout = QHBoxLayout()
+        sliderLayout.addWidget(QLabel("-10"))
+        sliderLayout.addWidget(self.slider)
+        sliderLayout.addWidget(QLabel("10"))
+        self.addLayout(sliderLayout)
+        # self.setSpacing(100)
+    
+    def change_parameter_value(self, ):
+        value = self.slider.value()
+        PARAMETERS[self.paramidx] = value
+        update_display()
 
 
 
 class Window(QMainWindow):
-   def __init__(self):
-    super().__init__()
+    def __init__(self):
+        super().__init__()
 
-    self.setGeometry(300, 300, 600, 400)
-    self.setWindowTitle("Simulation GUI Demo")
+        self.setGeometry(300, 300, 1000, 600)
+        self.setWindowTitle("Simulation GUI Demo")
 
-    layout1 = QHBoxLayout()
-    layout2 = QVBoxLayout()
+        layout1 = QHBoxLayout()
+        layout1.setSpacing(10)
+        layout2 = QVBoxLayout()
+        layout3 = QVBoxLayout()
 
-    layout2.addWidget(Color('red'))
-    layout2.addWidget(Color('yellow'))
-    layout2.addWidget(Color('purple'))
+        spacing_str = " " * 70
+        self.myLabelSliders = [MyLabelSlider(i+1, i) for i in range(3)]
+        layout2.addLayout(self.myLabelSliders[0])
+        layout2.addWidget(QLabel(spacing_str))
+        layout2.addLayout(self.myLabelSliders[1])
+        layout2.addWidget(QLabel(spacing_str))
+        layout2.addLayout(self.myLabelSliders[2])
+        # layout2.setSpacing(10)
 
-    layout1.addLayout( layout2 )
+        layout1.addLayout( layout2 )
 
-    chart = MplCanvas(self, width=5, height=4, dpi=100)
-    chart.axes.bar([0, 1, 2], parameters)
-    chart.axes.set_title("Your parameters")
-    chart.axes.set_xticks([0, 1, 2])
-    chart.axes.set_xticklabels(["p1", "p2", "p3"])
-    
-    layout1.addWidget(chart)
+        self.chart = MplCanvas(self, width=10, height=8, dpi=100)
+        self.chart.axes.bar([0, 1, 2], PARAMETERS)
+        self.chart.axes.set_title("Parameter Values")
+        self.chart.axes.set_xticks([0, 1, 2])
+        self.chart.axes.set_xticklabels(["p1", "p2", "p3"])
+        self.chart.axes.set_ylim(-10, 10)
+        
+        layout3.addWidget(self.chart)
+        self.meanValueLabel = QLabel(f"Mean of parameters: {np.mean(PARAMETERS)}")
+        self.meanValueLabel.setAlignment(Qt.AlignCenter)
+        self.meanValueLabel.setFont(QFont("Arial", 20))
+        layout3.addWidget(self.meanValueLabel, Qt.AlignCenter)
+
+        layout1.addLayout( layout2 )
+        layout1.addLayout( layout3 )
+
+        widget = QWidget()
+        widget.setLayout(layout1)
+        self.setCentralWidget(widget)
+        self.show()
+
+    def update_display(self):
+        self.chart.axes.cla()
+        self.chart.axes.bar([0, 1, 2], PARAMETERS)
+        self.chart.axes.set_ylim(-10, 10)
+        self.chart.axes.set_title("Parameter Values")
+        self.chart.axes.set_xticks([0, 1, 2])
+        self.chart.axes.set_xticklabels(["p1", "p2", "p3"])
+        self.chart.draw()
+        self.meanValueLabel.setText(f"Mean of parameters: {np.mean(PARAMETERS)}")
+        for ls in self.myLabelSliders:
+            ls.label.setText(f"Parameter {ls.paramidx + 1} has value {PARAMETERS[ls.paramidx]}")
 
 
-    widget = QWidget()
-    widget.setLayout(layout1)
-    self.setCentralWidget(widget)
-    self.show()
-
-parameters = [3,2,1]
 app = QApplication(sys.argv)
 window = Window()
+
+def update_display():
+    window.update_display()
+
 sys.exit(app.exec_())
