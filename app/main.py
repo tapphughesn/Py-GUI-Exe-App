@@ -1,5 +1,6 @@
-from PyQt5.QtWidgets import *
+from PyQt5 import sip
 from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
