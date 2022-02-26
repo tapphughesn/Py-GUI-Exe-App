@@ -69,7 +69,7 @@ class Window(QMainWindow):
         layout2 = QVBoxLayout()
         layout3 = QVBoxLayout()
 
-        spacing_str = " " * 70
+        spacing_str = " " * 80
         self.myLabelSliders = [MyLabelSlider(i+1, i) for i in range(3)]
         layout2.addLayout(self.myLabelSliders[0])
         layout2.addWidget(QLabel(spacing_str))
@@ -88,7 +88,7 @@ class Window(QMainWindow):
         self.chart.axes.set_ylim(-10, 10)
         
         layout3.addWidget(self.chart)
-        self.meanValueLabel = QLabel(f"Mean of parameters: {np.mean(PARAMETERS)}")
+        self.meanValueLabel = QLabel(f"Mean of parameters: {int(np.mean(PARAMETERS) * 100) / 100.}")
         self.meanValueLabel.setAlignment(Qt.AlignCenter)
         self.meanValueLabel.setFont(QFont("Arial", 20))
         layout3.addWidget(self.meanValueLabel, Qt.AlignCenter)
@@ -109,7 +109,7 @@ class Window(QMainWindow):
         self.chart.axes.set_xticks([0, 1, 2])
         self.chart.axes.set_xticklabels(["p1", "p2", "p3"])
         self.chart.draw()
-        self.meanValueLabel.setText(f"Mean of parameters: {np.mean(PARAMETERS)}")
+        self.meanValueLabel.setText(f"Mean of parameters: {int(np.mean(PARAMETERS) * 100) / 100.}")
         for ls in self.myLabelSliders:
             ls.label.setText(f"Parameter {ls.paramidx + 1} has value {PARAMETERS[ls.paramidx]}")
 
